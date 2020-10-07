@@ -130,16 +130,17 @@ bool CheckPort () {
 	else return true;
 }
 
-bool isServiceRunning(const char *serviceName) {	
-	Handle handle;	
-	SmServiceName service_name = smEncodeName(serviceName);	
-	bool running = R_FAILED(smRegisterService(&handle, service_name, false, 1));	
+Result smAtmosphereHasService(bool *out, SmServiceName name) {
+    u8 tmp;
+    Result rc = serviceDispatchInOut(smGetServiceSession(), 65100, name, tmp);
+    if (R_SUCCEEDED(rc) && out) *out = tmp & 1;
+    return rc;
+}
 
-	svcCloseHandle(handle);	
-
-	if (!running) smUnregisterService(service_name);	
-
-	return running;	
+bool isServiceRunning(const char *serviceName) {
+	bool has = false;
+	smAtmosphereHasService(&has, smEncodeName(serviceName));
+	return has;
 }
 
 void CheckIfGameRunning(void*) {
